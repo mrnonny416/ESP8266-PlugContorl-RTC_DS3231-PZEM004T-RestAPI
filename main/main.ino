@@ -6,24 +6,24 @@
 
 
 //Digital Port Initial-----
-#define LED_PIN1 D0  //พอร์ทเชื่อมต่อ ดิจิตอลช่องที่ 0
-#define LED_PIN2 D3  //พอร์ทเชื่อมต่อ ดิจิตอลช่องที่ 3
-#define LED_PIN3 D4  //พอร์ทเชื่อมต่อ ดิจิตอลช่องที่ 4
-#define LED_PIN4 D7  //พอร์ทเชื่อมต่อ ดิจิตอลช่องที่ 7
+#define LED_PIN1 D0  //พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 0
+#define LED_PIN2 D3  //พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 3
+#define LED_PIN3 D4  //พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 4
+#define LED_PIN4 D7  //พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 7
 
 //API Method Initial-----
 #define SERVER_PORT 8888                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "*************";  // URL Domain ที่ API ใช้งานอยู่
+const char* server_ip = "**********";  // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
 
 //WIFI Variable initial-----
-const char* ssid = "**************";     //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char* password = "**************";  //Password ของ WIFI
+const char* ssid = "**********";     //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char* password = "***************";  //Password ของ WIFI
 
 //Electic Mornitor By PZEM-004T Initial-----
-PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ทเชื่อมต่อให้กับ โมดูล Pzem004-T
+PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ตเชื่อมต่อให้กับ โมดูล Pzem004-T
 
 //API Method Initial-----
 HTTPClient http;    //ประกาศใช้ HTTPCLient ลงในตัวแปรชื่อ http
@@ -39,15 +39,15 @@ const long days_delay = 86400000;
 bool wera = 1;
 //-------------------------------setup-----------------------------------
 void setup() {
-  pinMode(LED_PIN1, OUTPUT);  //ให้พอร์ท ส่งกำลังไฟออก
-  pinMode(LED_PIN2, OUTPUT);  //ให้พอร์ท ส่งกำลังไฟออก
-  pinMode(LED_PIN3, OUTPUT);  //ให้พอร์ท ส่งกำลังไฟออก
-  pinMode(LED_PIN4, OUTPUT);  //ให้พอร์ท ส่งกำลังไฟออก
+  pinMode(LED_PIN1, OUTPUT);  //ให้พอร์ต ส่งกำลังไฟออก
+  pinMode(LED_PIN2, OUTPUT);  //ให้พอร์ต ส่งกำลังไฟออก
+  pinMode(LED_PIN3, OUTPUT);  //ให้พอร์ต ส่งกำลังไฟออก
+  pinMode(LED_PIN4, OUTPUT);  //ให้พอร์ต ส่งกำลังไฟออก
   //Active Low
-  digitalWrite(LED_PIN1, HIGH);  //ให้พอร์ททำการใช้งาน
-  digitalWrite(LED_PIN2, HIGH);  //ให้พอร์ททำการใช้งาน
-  digitalWrite(LED_PIN3, HIGH);  //ให้พอร์ททำการใช้งาน
-  digitalWrite(LED_PIN4, HIGH);  //ให้พอร์ททำการใช้งาน
+  digitalWrite(LED_PIN1, HIGH);  //ให้พอร์ตทำการใช้งาน
+  digitalWrite(LED_PIN2, HIGH);  //ให้พอร์ตทำการใช้งาน
+  digitalWrite(LED_PIN3, HIGH);  //ให้พอร์ตทำการใช้งาน
+  digitalWrite(LED_PIN4, HIGH);  //ให้พอร์ตทำการใช้งาน
 
   Serial.begin(115200);  //ประกาศ Serial Speed
 
@@ -101,8 +101,8 @@ void loop() {                //เริ่ม Loop Main Function
   while (!client.available())  //วนซ้ำจนกว่าจะสามารถทำการเรียก `GET` API ได้
     ;
   String response = client.readString();            //ทำการรับค่า Response
-  int bodyStart = response.indexOf("\r\n\r\n");     //ส่วนที่ทำให้ได้ Response แค่ส่วนที่ใช้งานโดยตัดด้านหัวออก
-  String body = response.substring(bodyStart + 4);  // ส่วนที่ทำให้ได้ Response แค่ส่วนที่ใช้งานโดยตัดด้านท้ายออก
+  int bodyStart = response.indexOf("\r\n\r\n");     //หาว่าส่วนที่เป็นค่าว่าและการเว้นบรรทัดอยู่ที่ส่วนไหนแล้วทำการบันทึกลงในตัวแปร `bodyStart`
+  String body = response.substring(bodyStart + 4);  // ทำการตัดส่วนที่เป็นค่าว่าส่วนหัวออก รวมถึงอีก 4 ตัวอักษรถัดมาด้วย
 
   DeserializationError error = deserializeJson(doc1, body);  //ทำการแปลงข้อมูล Response ที่มีแต่ส่วนที่ใช้งานได้ ให้เป็น Json
 
@@ -116,7 +116,7 @@ void loop() {                //เริ่ม Loop Main Function
     Serial.print(power);
     Serial.println("W");                                                                 //แสดงค่าพลังงานที่ใช้งาน `Power : ** W`
     if (check_safety(power)) {                                                           //เรียกใช้ฟังก์ชัน check_safety โดยจะส่งข้อมูล(parameter) power(กำลังไฟฟ้า) เข้าไปในฟังก์ชันด้วย
-                                                                                         //หากเช็คแล้วเป็น TRUE หมายถึงกำลังไฟใช้งานเกินกว่าที่ได้ตั้งไว้ จะทำการปิดพอร์ทปลั๊กไฟทั้งหมดทันที
+                                                                                         //หากเช็คแล้วเป็น TRUE หมายถึงกำลังไฟใช้งานเกินกว่าที่ได้ตั้งไว้ จะทำการปิดพอร์ตปลั๊กไฟทั้งหมดทันที
       for (int i = 0; i < 4; i++) {                                                      //วนลูปเพื่อสั่งงานปิดปลั๊กไฟทั้งหมด
         Serial.println("---------!!!Power Over Load!!! .·´¯`(>▂<)´¯`·. -------------");  //แสดงข้อความว่าพลังงานเกิน `---------!!!Power Over Load!!!-------------`
         CONTROL_PLUG_ON_OFF(i + 1, false);                                               //เรียกใช้ฟังก์ชัน CONTROL_PLUG_ON_OFF โดยจะส่งค่า(parameter)เข้าไปคือ
@@ -161,75 +161,94 @@ void loop() {                //เริ่ม Loop Main Function
       Serial.println("Error read energy");  //แสดง `Error read energy`
     }
   }
-  if ((nub != days) && (wera == 0)) {
-    wera = 1;
+  if ((nub != days) && (wera == 0)) {  //ตรวจสอบเงื่อนไขว่า วันที่ปัจจุบันไม่ตรงกับวันที่ตั้งค่าไว้หรือไม่และสถานะการส่งข้อมูลเปลี่ยนแล้วหรือยัง
+                                       //nub != days : nub คือ 26 และ days คือ วันที่ปัจจุบัน -> ดังนั้น หากวันที่ปัจจุบันไม่ใช่นที่ 26 จะเข้าเงื่อนไข คืนค่า `TRUE`
+                                       //wera == 0 : wera คือ สถานะว่าวันที่นี้ทำการส่งค่าไปยังฐานข้อมูลหรือยัง โดย `1` หมายถึงยังไม่ได้ส่ง และ `0` คือทำการส่งค่าไปแล้ว หากเป็น 0 จะคืนค่า `TRUE`
+    wera = 1;                          //เปลี่ยนค่า wera ให้เป็น `1` ซึ่งหมายถึง ได้ส่งข้อมูลของเดือนนี้ไปที่ฐานข้อมูลเรียบร้อยแล้ว
   }
-
   return;
 }  // -- End Loop()
 //------------------control_plug_on_off-------------------------------------------
+//ฟังก์ชัน CONTROL_PLUG_ON_OFF คือฟังก์ชันในการสั่งงานเปิดปิด ปลั๊กไฟ ตาม ID และ สถานะ ที่รับมาจากฐานข้อมูล โดยมีค่าที่รับเข้ามา(Argument) ดังนี้
+// int channelId คือ ID หรือตัวแปรที่ใช้ชี้ว่าพอร์ตที่กำลังจะสั่งงานคือพอร์ตใด โดยจะเป็นค่าตัวเลข int(Integer) ตั้งแต่ 1 ถึง 4
+// bool status สถานะที่ตั้งค่ามาจาก WebApplication แล้วทำการเรียกผ่าน API โดยค่าจะเป็นตรรกะ bool(Boolean) `TRUE` หรือ `FALSE`
 void CONTROL_PLUG_ON_OFF(int channelId, bool status) {
-  int LED_PIN;
-  switch (channelId) {
-    case 1:
-      LED_PIN = LED_PIN1;
-      break;
-    case 2:
-      LED_PIN = LED_PIN2;
-      break;
-    case 3:
-      LED_PIN = LED_PIN3;
-      break;
-    case 4:
-      LED_PIN = LED_PIN4;
-      break;
-    default:
-      LED_PIN = 0;
-      break;
+  int LED_PIN;             //ประกาศตัวแปร LED_PIN เพื่อใช้ในการเก็บ พอร์ตการทำงานเพื่อสั่งงานในขั้นถัดไป
+  switch (channelId) {     // switch ฟังก์ชันคือการตรวจสอบค่าที่ต้องการ ในที่นี้คือ channelID โดยจะมีเงื่อนไขดังนี้
+                           //หาก channelID มีค่าเป็น 1 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN1 หรือ D0 (digital Port ช่องที่ 0)
+                           //หาก channelID มีค่าเป็น 2 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN2 หรือ D3 (digital Port ช่องที่ 3)
+                           //หาก channelID มีค่าเป็น 3 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN3 หรือ D4 (digital Port ช่องที่ 4)
+                           //หาก channelID มีค่าเป็น 4 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN4 หรือ D5 (digital Port ช่องที่ 7)
+    case 1:                //เงื่อนไข เช็คว่า channelID เท่ากับ 1 หรือไม่
+      LED_PIN = LED_PIN1;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN1 หรือ D0
+      break;               //ออกจากฟังก์ชัน switch
+    case 2:                //เงื่อนไข เช็คว่า channelID เท่ากับ 2 หรือไม่
+      LED_PIN = LED_PIN2;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN2 หรือ D3
+      break;               //ออกจากฟังก์ชัน switch
+    case 3:                //เงื่อนไข เช็คว่า channelID เท่ากับ 3 หรือไม่
+      LED_PIN = LED_PIN3;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN3 หรือ D4
+      break;               //ออกจากฟังก์ชัน switch
+    case 4:                //เงื่อนไข เช็คว่า channelID เท่ากับ 4 หรือไม่
+      LED_PIN = LED_PIN4;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN4 หรือ D7
+      break;               //ออกจากฟังก์ชัน switch
+    default:               //หากไม่เข้าเงือนไขใดๆจะทำการทำคำสั่งของ default เปรียบได้เหมือนกับ else ของ if..else
+      return;              //ทำการออกจากฟังก์ชัน CONTROL_PLUG_ON_OFF
+      break;               //ออกจากฟังก์ชัน switch
   }
-  digitalWrite(LED_PIN, (status ? LOW : HIGH));
+  digitalWrite(LED_PIN, (status ? LOW : HIGH));  //สั่งงานไฟที่พอร์ต โดยจะส่งค่าเข้าไปในฟังก์ชัน digitalWrite จะประกอบด้วย
+  //LED_PIN คือ พอร์ตที่ต้องการสั่งงาน
+  //status คือ สถานะที่ต้องการสั่งงาน หากเป็น `TRUE` จะเขียน LOW ไปที่ digital port และหากเป็น `FALSE` จะเขียน HIGH ไปที่ digital port
+  //NOTE:เนื่องจากเป็น Active Low การสั่งงาน `LOW` จึงหมายถึงการเปิด และ `HIGH` หมายถึงการปิด
 }
 //----------------------------------time_plug_on_off----------------------------------------
+//ฟังก์ชัน time_plug_on_off คือฟังก์ชันที่จะสั่งงานให้ปลั๊กไฟทำงานตามเวลาและวันที่ได้ตั้งค่าไว้ โดยที่ค่า่ที่รับเข้ามา(Argument) มีดังนี้
+// int channelId คือ ID หรือตัวแปรที่ใช้ชี้ว่าพอร์ตที่กำลังจะสั่งงานคือพอร์ตใด โดยจะเป็นค่าตัวเลข int(Integer) ตั้งแต่ 1 ถึง 4
+// int templateId คือ ID หรือตัวเลขที่บ่งบอกถึงการตั้งค่าที่อยู่บนฐานข้อมูล โดยจะเป็นค่าตัวเลข int(Integer) ตั้งแต่ 0 ถึง n(จำนวนขึ้นอยู่กับการตั้งค่า)
+// DateTime now คือ วันเวลาปัจจุบัน
 void time_plug_on_off(int channelId, int templateId, DateTime now) {
-  int LED_PIN;
-  switch (channelId) {
-    case 1:
-      LED_PIN = LED_PIN1;
-      break;
-    case 2:
-      LED_PIN = LED_PIN2;
-      break;
-    case 3:
-      LED_PIN = LED_PIN3;
-      break;
-    case 4:
-      LED_PIN = LED_PIN4;
-      break;
-    default:
-      LED_PIN = 0;
-      break;
+  int LED_PIN;             //ประกาศตัวแปร LED_PIN เพื่อใช้ในการเก็บ พอร์ตการทำงานเพื่อสั่งงานในขั้นถัดไป
+  switch (channelId) {     // switch ฟังก์ชันคือการตรวจสอบค่าที่ต้องการ ในที่นี้คือ channelID โดยจะมีเงื่อนไขดังนี้
+                           //หาก channelID มีค่าเป็น 1 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN1 หรือ D0 (digital Port ช่องที่ 0)
+                           //หาก channelID มีค่าเป็น 2 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN2 หรือ D3 (digital Port ช่องที่ 3)
+                           //หาก channelID มีค่าเป็น 3 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN3 หรือ D4 (digital Port ช่องที่ 4)
+                           //หาก channelID มีค่าเป็น 4 ให้ทำการ เปลี่ยน LED_PIN เป็น LED_PIN4 หรือ D5 (digital Port ช่องที่ 7)
+    case 1:                //เงื่อนไข เช็คว่า channelID เท่ากับ 1 หรือไม่
+      LED_PIN = LED_PIN1;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN1 หรือ D0
+      break;               //ออกจากฟังก์ชัน switch
+    case 2:                //เงื่อนไข เช็คว่า channelID เท่ากับ 2 หรือไม่
+      LED_PIN = LED_PIN2;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN2 หรือ D3
+      break;               //ออกจากฟังก์ชัน switch
+    case 3:                //เงื่อนไข เช็คว่า channelID เท่ากับ 3 หรือไม่
+      LED_PIN = LED_PIN3;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN3 หรือ D4
+      break;               //ออกจากฟังก์ชัน switch
+    case 4:                //เงื่อนไข เช็คว่า channelID เท่ากับ 4 หรือไม่
+      LED_PIN = LED_PIN4;  //ทำการแปลงค่าให้กับ LED_PIN เป็น พอร์ตการเชื่อมต่อ LED_PIN4 หรือ D7
+      break;               //ออกจากฟังก์ชัน switch
+    default:               //หากไม่เข้าเงือนไขใดๆจะทำการทำคำสั่งของ default เปรียบได้เหมือนกับ else ของ if..else
+      return;              //ทำการออกจากฟังก์ชัน CONTROL_PLUG_ON_OFF
+      break;               //ออกจากฟังก์ชัน switch
   }
-  Serial.print("Have Template : ID :");  //<-----------------check Template Get
-  Serial.print(templateId);              //<-----------------check Template Get
-  String url = "/template/detail?id=" + String(templateId);
-  Serial.println(url);  //<-----------------check Template Get
-
-  if (!client.connect(server_ip, SERVER_PORT)) {
-    Serial.println("Connection API failed");
-    return;
+  Serial.print("Have Template : ID :");                      //<-----------------check Template Get
+  Serial.print(templateId);                                  //<-----------------check Template Get
+  String url = "/template/detail?id=" + String(templateId);  //ตรวจสอบ URL ที่ทำการเรียกข้อมูลการทำงานตามเวลาที่ได้ตั้งไว้
+  Serial.println(url);                                       //<-----------------check Template Get
+                                                             //แสดง `Have Template : ID : ** /template/detail?id=**`
+  if (!client.connect(server_ip, SERVER_PORT)) {             //ทำการเชื่อมต่อ API โดยใช้ตัวแปร server_ip และ SERVER_PORT
+    Serial.println("Connection API failed");                 // ถ้าเชื่อมต่อไม่ได้จะแสดง `Connection API failed` จนกว่าจะเชื่อมต่อได้
+    return;                                                  //วนกลับไปเริ่มต้นการทำงาน function loop ใหม่
   }
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + server_ip + "\r\n" + "Connection: close\r\n\r\n");
-  while (!client.available())
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + server_ip + "\r\n" + "Connection: close\r\n\r\n");  //วิธีการเขียน `GET` API
+  while (!client.available())                                                                                          //วนซ้ำจนกว่าจะสามารถทำการเรียก `GET` API ได้
     ;
-  String response = client.readString();
-  int bodyStart = response.indexOf("\r\n\r\n");
-  String body = response.substring(bodyStart + 4);
-  DeserializationError error = deserializeJson(doc2, body);
-  Serial.println("Fetch Complete");  //<-----------------check Template Get
-  if (error) {
-    Serial.print(response);
-    Serial.println("Parsing doc 2 failed");  //<-----------------check Template Get
-    return;
+  String response = client.readString();                     //ทำการรับค่า Response
+  int bodyStart = response.indexOf("\r\n\r\n");              //หาว่าส่วนที่เป็นค่าว่าและการเว้นบรรทัดอยู่ที่ส่วนไหนแล้วทำการบันทึกลงในตัวแปร `bodyStart`
+  String body = response.substring(bodyStart + 4);           // ทำการตัดส่วนที่เป็นค่าว่าส่วนหัวออก รวมถึงอีก 4 ตัวอักษรถัดมาด้วย
+  DeserializationError error = deserializeJson(doc2, body);  //ทำการแปลงข้อมูล Response ที่มีแต่ส่วนที่ใช้งานได้ ให้เป็น Json
+  Serial.println("Fetch Complete");                          //<-----------------check Template Get
+  //ตรวจสอบว่าทำการดึงได้สำเร็จหรือไม่
+  if (error) {                              //หากแปลงไม่ผ่านจะทำการแจ้งเตือน
+    Serial.println("Parsing doc2 failed");  //แสดง`Parsing doc2 failed`
+    return;                                 //วนซ้ำจนกว่าจะแปลงข้อมูลสำเร็จ
   }
   if (doc2["data"]["type"]) {       //type is 1 mean time set
     Serial.print("Get type 1 : ");  //<-----------------check Template Get
