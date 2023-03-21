@@ -13,16 +13,16 @@
 
 //API Method Initial-----
 #define SERVER_PORT 8888 // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "ln-web.ichigozdata.win"; // URL Domain ที่ API ใช้งานอยู่
+const char* server_ip = "********"; // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC; // ประการศตัวแปร RTC ให้ใช้งานโมดูล
 
 //WIFI Variable initial-----
-// const char* ssid = "DonausDev_2G";
-const char* ssid = "3BB_Ni-Nack-Non_2.4GHz";
-// const char* password = "1212312121A";
-const char* password = "0850393221";
+
+const char* ssid = "*****";
+
+const char* password = "*****";
 char WiFi_Disconnected[50];
 char WiFi_Connected[50];
 
