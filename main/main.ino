@@ -13,14 +13,14 @@
 
 //API Method Initial-----
 #define SERVER_PORT 8888                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "**********";  // URL Domain ที่ API ใช้งานอยู่
+const char* server_ip = "********";  // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
 
 //WIFI Variable initial-----
-const char* ssid = "**********";     //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char* password = "***************";  //Password ของ WIFI
+const char* ssid = "********";     //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char* password = "********";  //Password ของ WIFI
 
 //Electic Mornitor By PZEM-004T Initial-----
 PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ตเชื่อมต่อให้กับ โมดูล Pzem004-T
@@ -84,10 +84,10 @@ void loop() {                //เริ่ม Loop Main Function
   Serial.print("Today is : ");
   Serial.print(now.day());
   Serial.print(" : Left day to Send Energy : ");
-  Serial.println(days > nub ? "1Month" : nub - days);  //แสดง `Today is : xx : Left day to send Energy : ****`
-  float power = pzem.power();                          //พลังงานไฟฟ้าปัจจุบัน
-  float energy = pzem.energy();                        //พลังงานไฟฟ้าที่ใช้งานในวงจร
-  float current = pzem.current();                      //กระแสที่ใช้งานอยู่ในวงจร
+  Serial.println(days > nub ? "1Month" : String(nub - days));  //แสดง `Today is : xx : Left day to send Energy : ****`
+  float power = pzem.power();                                  //พลังงานไฟฟ้าปัจจุบัน
+  float energy = pzem.energy();                                //พลังงานไฟฟ้าที่ใช้งานในวงจร
+  float current = pzem.current();                              //กระแสที่ใช้งานอยู่ในวงจร
 
   //---------------------------------Fetching Data----------------------------------
   if (!client.connect(server_ip, SERVER_PORT)) {  //ทำการเชื่อมต่อ API โดยใช้ตัวแปร server_ip และ SERVER_PORT
@@ -250,115 +250,168 @@ void time_plug_on_off(int channelId, int templateId, DateTime now) {
     Serial.println("Parsing doc2 failed");  //แสดง`Parsing doc2 failed`
     return;                                 //วนซ้ำจนกว่าจะแปลงข้อมูลสำเร็จ
   }
-  if (doc2["data"]["type"]) {       //type is 1 mean time set
-    Serial.print("Get type 1 : ");  //<-----------------check Template Get
-    String dateStart = doc2["data"]["datestart"];
-    String dateEnd = doc2["data"]["dateend"];
-    int dayStart = dateStart.substring(8, 10).toInt();
-    int monthStart = dateStart.substring(5, 7).toInt();
-    int yearStart = dateStart.substring(0, 4).toInt();
-    int dayEnd = dateStart.substring(8, 10).toInt();
-    int monthEnd = dateStart.substring(5, 7).toInt();
-    int yearEnd = dateStart.substring(0, 4).toInt();
-    Serial.print(dateStart);  //<-----------------check Template Get
-    Serial.print("to");       //<-----------------check Template Get
-    Serial.print(dateEnd);    //<-----------------check Template Get
+
+  if (doc2["data"]["type"]) {                      //type is 1 mean time set
+                                                   //เงื่อนไขการทำงานระบบตั้งเวลาจะมี 2 รูปแบบ คือแบบตั้งโดยวันที่(01-12-2023) และแบบที่ตั้งโดยเป็นวัน(จันทร์ อังคาร ... เสาร์ อาทิตย์)
+                                                   //โดยที่ทั้ง 2 รูปแบบจะมีการบ่งบอกคือ type ในที่นี้ มีการดึงมาจากฐานข้อมูลคือ doc2["data"]["type"] โดยจะมีข้อมูลคือ
+                                                   // `1` คือ ตั้งค่าแบบวันที่
+                                                   // `0` คือ ตั้งค่าแบบวัน
+                                                   //⬆เป็นการตรวจสอบเงื่อนไขว่า type หรือ ประเภทการตั้งเวลาเป็นแบบไหนในที่นี้คือ `1` จะทำงานตามเงื่อนไขหลัก และ `0` จะทำงานตามเงื่อนไข else
+    String dateStart = doc2["data"]["datestart"];  //นำค่าที่รับมาจากฐานข้อมูลในรูปแบบ json มาใส่ไว้ในตัวแปร | ข้อมูลคือ doc2["data"]["datestart"] หรือ วัน/เดือน/ปี ที่เริ่มทำงาน
+    String dateEnd = doc2["data"]["dateend"];      //นำค่าที่รับมาจากฐานข้อมูลในรูปแบบ json มาใส่ไว้ในตัวแปร | ข้อมูลคือ doc2["data"]["dateend"] หรือ วัน/เดือน/ปี ที่สิ้นสุดการทำงาน
+    //format ที่ได้จาก json จะเป็น yyyy-mm-dd (2023-03-15)
+    // ________________________
+    // |0|1|2|3|4|5|6|7|8|9|10|
+    // --------|-|---|-|-------
+    // |y|y|y|y|-|m|m|-|d|d|  |
+    int dayStart = dateStart.substring(8, 10).toInt();   //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 8 เป็นต้นไปถึง 10 จะได้ข้อมูล yyyy-mm-dd -> dd | คือวันที่เริ่ม
+    int monthStart = dateStart.substring(5, 7).toInt();  //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 5 เป็นต้นไปถึง 7 จะได้ข้อมูล yyyy-mm-dd -> mm | คือเดือนที่เริ่ม
+    int yearStart = dateStart.substring(0, 4).toInt();   //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 4 จะได้ข้อมูล yyyy-mm-dd -> yyyy | คือปีที่เริ่ม
+    int dayEnd = dateStart.substring(8, 10).toInt();     //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 8 เป็นต้นไปถึง 10 จะได้ข้อมูล yyyy-mm-dd -> dd | คือวันที่จบ
+    int monthEnd = dateStart.substring(5, 7).toInt();    //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 5 เป็นต้นไปถึง 7 จะได้ข้อมูล yyyy-mm-dd -> mm | คือเดือนที่จบ
+    int yearEnd = dateStart.substring(0, 4).toInt();     //ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 4 จะได้ข้อมูล yyyy-mm-dd -> yyyy | คือปีที่จบ
+    Serial.print("Get type 1 : ");                       //<-----------------check Template Get
+    Serial.print(dateStart);                             //<-----------------check Template Get
+    Serial.print("to");                                  //<-----------------check Template Get
+    Serial.print(dateEnd);                               //<-----------------check Template Get
+    //แสดง `Get type 1 : yyyy-mm-dd to yyyy-mm-dd`
 
     if (now.year() >= yearStart && now.year() <= yearEnd && now.month() >= monthStart && now.month() <= monthEnd && now.day() >= dayStart && now.day() <= dayEnd) {
-      // date is within range]
-      Serial.print(" -- status In date");  //<-----------------check Template Get
-
-
-      String timestart = doc2["data"]["timestart"];
-      int hour_start = timestart.substring(0, 2).toInt();
-      int minute_start = timestart.substring(3, 5).toInt();
-      String timeend = doc2["data"]["timeend"];
-      int hour_end = timeend.substring(0, 2).toInt();
-      int minute_end = timeend.substring(3, 5).toInt();
+      //เงื่อนไขที่จะทำการตรวจสอบว่า วัน เดือน ปี ปัจจุบัน อยู่ในช่วงเวลาที่ได้มีการตั้งเวลาไว้หรือไม่ จะประกอบด้วยเงื่อนไขดังนี้
+      //now.year() >= yearStart คือ ปีปัจจุบัน เป็นปีที่มากกว่าหรือเป็นปีเดียวกับที่ตั้งค่าไว้หรือไม่
+      //now.year() <= yearEnd คือ ปีปัจจุบัน เป็นปีที่น้อยกว่าหรือเป็นปีเดียวกับที่ตั้งค่าไว้หรือไม่
+      //now.month() >= monthStart คือ เดือนปัจจุบัน เป็นเดือนที่มากกว่าหรือเป็นเดือนเดียวกับที่ตั้งค่าไว้หรือไม่
+      //now.month() <= monthEnd คือ เดือนปัจจุบัน เป็นเดือนที่น้อยกว่าหรือเป็นเดือนเดียวกับที่ตั้งค่าไว้หรือไม่
+      //now.day() >= dayStart คือ วันที่ปัจจุบัน เป็นวันที่ที่มากกว่าหรือเป็นวันที่เดียวกับที่ตั้งค่าไว้หรือไม่
+      //now.day() <= dayEnd คือ วันที่ปัจจุบัน เป็นวันที่ที่น้อยกว่าหรือเป็นวันที่เดียวกับที่ตั้งค่าไว้หรือไม่
+      //สรุปง่ายๆ ว่า วันที่ปัจจุบันอยู่ในช่วงเวลาที่ได้ตั้งเวลาไว้หรือไม่ ถ้าใช้ ทั้ง 6 เงื่อนไข จะเป็น `TRUE` แล้วจะทำงานตามคำสั่งภายใน IF
+      Serial.print("Today is Have Timer Set Working");       //<-----------------check Template Get
+                                                             // แสดง `Today is Have Timer Set Working`
+      String timestart = doc2["data"]["timestart"];          // ประกาศตัวแปร timestart มาเพื่อเก็บเวลาเริ่มต้นในการทำงานในวั้นนั้น โดยจะได้ข้อมูลมาจาก json และเลือกเอาเฉพาะ `doc2["data"]["timestart"]` | จะอยู่ในรูปแบบ HH:MM (11:00)
+      String timeend = doc2["data"]["timeend"];              // ประกาศตัวแปร timeend มาเพื่อเก็บเวลาเริ่มต้นในการทำงานในวั้นนั้น โดยจะได้ข้อมูลมาจาก json และเลือกเอาเฉพาะ `doc2["data"]["timeend"]` | จะอยู่ในรูปแบบ HH:MM (11:00)
+                                                             // _____________
+                                                             // |0|1|2|3|4|5|
+                                                             // ----|-|---|-|
+                                                             // |H|H|:|M|M| |
+      int hour_start = timestart.substring(0, 2).toInt();    // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่เริ่ม
+      int minute_start = timestart.substring(3, 5).toInt();  // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่เริ่ม
+      int hour_end = timeend.substring(0, 2).toInt();        // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่สิ้นสุด
+      int minute_end = timeend.substring(3, 5).toInt();      // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่สิ้นสุด
       if (now.hour() >= hour_start && now.minute() >= minute_start && now.hour() <= hour_end && now.minute() <= minute_end) {
-        digitalWrite(LED_PIN, LOW);
-        Serial.print(" -- status In time");  //<-----------------check Template Get
-        Serial.println("");                  //<-----------------check Template Get
-      } else {
-        digitalWrite(LED_PIN, HIGH);
-        Serial.print(" -- status OUT time");  //<-----------------check Template Get
-        Serial.println("");                   //<-----------------check Template Get
+        // เงื่อนไขที่จะทำการตรวจสอบว่า เวลา ปัจจุบัน อยู่ในช่วงเวลาที่ได้มีการตั้งเวลาไว้หรือไม่ จะประกอบด้วยเงื่อนไขดังนี้
+        // now.hour() >= hour_start คือ เวลาในหลักชั่วโมงปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.hour() <= hour_end คือ เวลาในหลักชั่วโมงปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.minute() >= minute_start คือ เวลาในหลักนาทีปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.minute() <= minute_end คือ เวลาในหลักนาทีปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        digitalWrite(LED_PIN, LOW);          // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ LOW (เปิดการทำงาน)
+        Serial.println("Timer Switch ON");   // แสดง `Timer Switch ON`
+      } else {                               // หากไม่เข้าเงื่อนไขที่ว่า `เวลาปัจจุบันไม่อยู่ในช่วงที่ตั้งเวลาไว้`
+        digitalWrite(LED_PIN, HIGH);         // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ HIGH (ปิดการทำงาน)
+        Serial.println("Timer Switch OFF");  // แสดง `Timer Switch OFF`
       }
     }
   } else {                            //type is 0 mean weekly set
-    Serial.println("Get type 0 : ");  //<-----------------check Template Get
+                                      //เป็นเงื่อนไขที่จะทำเมื่อตรวจสอบ doc2["data"]["type"] แล้วมีค่า เป็น `0` หมายความว่ามีการตั้งค่าเป็นแบบกำหนดวันแบบรายสัปดาห์
+    Serial.println("Get type 0 : ");  //แสดง `Get type :`
     if (doc2["data"]["daystart"] <= now.dayOfTheWeek() && doc2["data"]["dayend"] >= now.dayOfTheWeek()) {
-      String timestart = doc2["data"]["timestart"];
-      int hour_start = timestart.substring(0, 2).toInt();
-      int minute_start = timestart.substring(3, 5).toInt();
-      String timeend = doc2["data"]["timeend"];
-      int hour_end = timeend.substring(0, 2).toInt();
-      int minute_end = timeend.substring(3, 5).toInt();
-      Serial.print(timestart);  //<-----------------check Template Get
-      Serial.print("to");       //<-----------------check Template Get
-      Serial.print(timeend);    //<-----------------check Template Get
+      // เงื่อนไขว่าวันปัจจุบันเป็นอยู่ในช่วงวันที่ได้ตั้งค่าเวลาไว้หรือไม่ โดยมีเงื่อนไขดังนี้
+      // doc2["data"]["daystart"] <= now.dayOfTheWeek()
+      // doc2["data"]["dayend"] >= now.dayOfTheWeek()
+      String timestart = doc2["data"]["timestart"];          // ประกาศตัวแปร timestart มาเพื่อเก็บเวลาเริ่มต้นในการทำงานในวั้นนั้น โดยจะได้ข้อมูลมาจาก json และเลือกเอาเฉพาะ `doc2["data"]["timestart"]` | จะอยู่ในรูปแบบ HH:MM (11:00)
+      String timeend = doc2["data"]["timeend"];              // ประกาศตัวแปร timeend มาเพื่อเก็บเวลาเริ่มต้นในการทำงานในวั้นนั้น โดยจะได้ข้อมูลมาจาก json และเลือกเอาเฉพาะ `doc2["data"]["timeend"]` | จะอยู่ในรูปแบบ HH:MM (11:00)
+                                                             // _____________
+                                                             // |0|1|2|3|4|5|
+                                                             // ----|-|---|-|
+                                                             // |H|H|:|M|M| |
+      int hour_start = timestart.substring(0, 2).toInt();    // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่เริ่ม
+      int minute_start = timestart.substring(3, 5).toInt();  // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่เริ่ม
+      int hour_end = timeend.substring(0, 2).toInt();        // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่สิ้นสุด
+      int minute_end = timeend.substring(3, 5).toInt();      // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่สิ้นสุด
+      Serial.print(timestart);                               //<-----------------check Template Get
+      Serial.print("to");                                    //<-----------------check Template Get
+      Serial.print(timeend);                                 //<-----------------check Template Get
+                                                             //แสดง `Get type 1 : HH:MM to HH:MM`
       if (now.hour() >= hour_start && now.minute() >= minute_start && now.hour() <= hour_end && now.minute() <= minute_end) {
-        Serial.print(" -- status In time");  //<-----------------check Template Get
-        Serial.println("");                  //<-----------------check Template Get
-        digitalWrite(LED_PIN, LOW);
-      } else {
-        Serial.print(" -- status Out time");  //<-----------------check Template Get
-        Serial.println("");                   //<-----------------check Template Get
-        digitalWrite(LED_PIN, HIGH);
+        // เงื่อนไขที่จะทำการตรวจสอบว่า เวลา ปัจจุบัน อยู่ในช่วงเวลาที่ได้มีการตั้งเวลาไว้หรือไม่ จะประกอบด้วยเงื่อนไขดังนี้
+        // now.hour() >= hour_start คือ เวลาในหลักชั่วโมงปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.hour() <= hour_end คือ เวลาในหลักชั่วโมงปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.minute() >= minute_start คือ เวลาในหลักนาทีปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        // now.minute() <= minute_end คือ เวลาในหลักนาทีปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
+        digitalWrite(LED_PIN, LOW);          // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ LOW (เปิดการทำงาน)
+        Serial.println("Timer Switch ON");   // แสดง `Timer Switch ON`
+      } else {                               // หากไม่เข้าเงื่อนไขที่ว่า `เวลาปัจจุบันไม่อยู่ในช่วงที่ตั้งเวลาไว้`
+        digitalWrite(LED_PIN, HIGH);         // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ HIGH (ปิดการทำงาน)
+        Serial.println("Timer Switch OFF");  // แสดง `Timer Switch OFF`
       }
     }
   }
 }
 
-void report_Power(float power_unit) {
-  http.begin(client, "http://ln-web.ichigozdata.win:8888/saveunit/add");
-  http.addHeader("Content-Type", "application/json");
-  StaticJsonDocument<200> doc;
-  doc["unit"] = power_unit;
-  doc["date"] = nullptr;
+void report_Power(float power_unit) {                                     //ฟังก์ชันที่มีไว้สำหรับการส่งข้อมูลไปยังฐานข้อมูล โดยผ่าน API
+                                                                          //เริ่มต้นด้วยการติดต่อกับ API
+                                                                          //สร้าง Json File สำหรับส่งไป
+                                                                          //ใส่ข้อมูลลงใน Json File
+                                                                          //ส่งไฟล์ขึ้นไปที่ API
+  http.begin(client, "http://ln-web.ichigozdata.win:8888/saveunit/add");  //ทำการเปิดใช้งานโปรโตคอล HTTP ไปยังปลายทาง `http://ln-web.ichigozdata.win:8888/saveunit/add`
+  http.addHeader("Content-Type", "application/json");                     //ทำการเขียน Haader สำหรับส่ง API พร้อมบอกว่าเป็น Json File แนบไป
+  StaticJsonDocument<200> doc;                                            // สร้าง Json ขนาด 200 byte
+  doc["unit"] = power_unit;                                               // ใส่ข้อมูล [key:value] -> unit:power_unit | ตัวอย่าง (unit:1000) จะหมายถึงส่งค่า unit ไปมีค่าเป็น 1000
+  doc["date"] = nullptr;                                                  // ใส่ข้อมูล [key:value] -> date:null | Note. null หมายถึงค่าที่ว่างเปล่าไม่มีข้อมูลใดๆ สำหรับ c++ จำเป็นต้องใช้งานเป็น `nullptr` หมายถึง null pointer ซึ่งใช้งานเหมือน null ทั่วไป
 
-  String json;
-  serializeJson(doc, json);
+  String json;               // สร้างตัวแปรชื่อ json เพื่อนำมานำข้อมูล json file มาไว้เป็นข้อความแล้วส่งไปทาง HTTP โปรโตอคล
+  serializeJson(doc, json);  // ทำการนำไฟล์ json file มาเก็บไว้ในตัวแปร `json`
 
-  int httpCode = http.POST(json);
-  if (httpCode > 0) {
-    String response = http.getString();
-    Serial.println(response);
-  } else {
-    Serial.println("Error sending data to server");
+  int httpCode = http.POST(json);                    // ทำการใช้ method `POST` แล้วส่งข้อความ json ขึ้นไป จากนั้นนำผลลัพธ์ที่ได้มาเก็บไว้ใน httpCode ส่งที่ได้คือมา โดยทั่วไป จะเป็น `200` หมายความว่าทำงานได้ OK
+  if (httpCode > 0) {                                // หากมีการส่งคืนค่า httpCode คืนมาหมายความว่าฟังก์ชันติดต่อทำงานได้และสามารถเชื่อมต่อกับ Internet ได้ ซึ่งในอีกความหมายคือสามารถส่งข้อมูลไปทาง API ได้อย่างไม่มีปัญหา
+    String response = http.getString();              // ทำการ getString เพื่อมาดูว่า Response(การตอบสนองของ API) เป็นอย่างไรบ้าง
+    Serial.println(response);                        //แสดง
+                                                     //     `{
+                                                     //     "code": 201,
+                                                     //     "data": {
+                                                     //         "save_uintId": **,
+                                                     //         "unit": **,
+                                                     //         "date": null
+                                                     //     },
+                                                     //     "msg": "Saveunit is Successfully Created."
+                                                     // }`
+  } else {                                           // หากไม่สามารถส่งค่าขึ้นไปหรือติดต่อกับ api ไม่ได้จะแจ้งเตือน
+    Serial.println("Error sending data to server");  // แสดง `Error sending data to server`
   }
-
-  http.end();
+  http.end();  // ทำการหยุดการเชื่อมต่อโปรโตคอล http
 }
 
 bool check_safety(float power) {
-  if (!client.connect(server_ip, SERVER_PORT)) {
-    Serial.println("Connection API failed");
-    return false;
+  // ฟังก์ชันตรวจสอบว่ากำลังไฟที่ทำงานอยู่ในวงจรเกินกว่าค่าที่ตั้งไว้หรือไม่
+  // ดึงค่าจากฐานข้อมูลผ่าน API มา
+  // นำมาตรวจสอบว่าค่าได้ทำการเปิดการจำกัดกำลังไฟหรือไม่ และกำลังไฟเกินกว่าที่ตั้งไว้หรือไม่
+  if (!client.connect(server_ip, SERVER_PORT)) {  //ตรวจสอบการเชื่อมต่อกับ API ว่าทำการเชื่อมต่อได้หรือไม่ โดยจะเชื่อมต่อกับ server_ip (ip หรือ domain name ที่ได้ประกาศไว้) และ SERVER_PORT (port การเชื่อมต่อ เช่น 8888)
+    Serial.println("Connection API failed");      // แสดง `onnection API failed` หากเชื่อมต่อไม่ได้
+    return false;                                 //ส่งคืนค่า `false` หมายถึง กำลังไฟไม่เกินกว่าที่กำหนดเนื่องจากตรวจสอบกับฐานข้อมูลไม่ได้
   }
 
-  String url = "/savety/all";
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + server_ip + "\r\n" + "Connection: close\r\n\r\n");
+  String url = "/savety/all";                                                                                          // ทำการเลือก method URL เพื่อทำการเรียกข้อมูลกำลังไฟและสถานะการจำกัด
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + server_ip + "\r\n" + "Connection: close\r\n\r\n");  //format สำหรับการติดต่อกับ API
 
-  while (!client.available())
+  while (!client.available())  //ตรวจสอบว่า สามารถติดต่อกับ server ได้หรือไม่ หากไม่ได้ ทำซ้ำจนกว่าจะติดต่อได้
     ;
-  String response = client.readString();
-  int bodyStart = response.indexOf("\r\n\r\n");
-  String body = response.substring(bodyStart + 4);
-  DeserializationError error = deserializeJson(doc3, body);
+  String response = client.readString();                     //ทำการรับค่า Response
+  int bodyStart = response.indexOf("\r\n\r\n");              //หาว่าส่วนที่เป็นค่าว่าและการเว้นบรรทัดอยู่ที่ส่วนไหนแล้วทำการบันทึกลงในตัวแปร `bodyStart`
+  String body = response.substring(bodyStart + 4);           // ทำการตัดส่วนที่เป็นค่าว่าส่วนหัวออก รวมถึงอีก 4 ตัวอักษรถัดมาด้วย
+  DeserializationError error = deserializeJson(doc3, body);  //ทำการแปลงข้อมูล Response ที่มีแต่ส่วนที่ใช้งานได้ ให้เป็น Json
 
-  if (error) {
-    Serial.println("Parsing failed");
-    return false;
+  if (error) {                              //หากแปลงไม่ผ่านจะทำการแจ้งเตือน
+    Serial.println("Parsing doc3 failed");  //แสดง`Parsing doc3 failed`
+    return false;                           //วนซ้ำจนกว่าจะแปลงข้อมูลสำเร็จ
   }
 
-  if (power > doc3["data"]["volt"] && doc3["data"]["status"]) {
-    return true;
-  } else {
+  if (power > doc3["data"]["volt"] && doc3["data"]["status"]) {  //เงื่อนไขสำหรับตรวจสอบว่า ค่าพลังงานไรวงจรเกินกว่าที่ตั้งค่าไว้ไหม และ ได้ทำการเปิดใช้งานการจำกัดพลังงานไหม
+                                                                 //หากได้เปิดการจำกัด และพลังงานเกินกว่าที่กำหนด จะคืนค่า `TRUE` หมายความว่า เกินกว่าที่กำหนด ให้สั่งปิดการทำงานของปลั๊กไฟทั้งหมดทันที
+    return true;                                                 // คืนค่า true หมายถึงเกินกว่าที่จำกัดไว้
+  } else {                                                       //หากพลังงานที่ตั้งไว้ไม่เกิน หรือไม่ได้เปิดการจำกัดไว้ จะเข้าเงื่อนไข else
     Serial.println("");
     Serial.print("Safety Over Load at : ");
     Serial.print(doc3["data"]["volt"] ? doc3["data"]["volt"] : 0);
-    Serial.println(" W");
-    return false;
+    Serial.println(" W");  //แสดง `Safety Over Load at : ** W`
+    return false;          // คืนค่า true หมายถึงไม่เกินกว่าที่กำหนด หรือไม่ได้เปิดใช้งานการจำกัด
   }
 }
