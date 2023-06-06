@@ -19,7 +19,7 @@
 
 //API Method Initial-----
 #define SERVER_PORT 8888                                   // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "http://ln-web.ichigozdata.win/";  // URL Domain ที่ API ใช้งานอยู่
+const char* server_ip = "ln-web.ichigozdata.win";  // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
