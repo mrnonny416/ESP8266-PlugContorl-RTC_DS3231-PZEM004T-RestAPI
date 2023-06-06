@@ -445,7 +445,7 @@ void checkstatus(DateTime mainTime) {
   unsigned long long serverMillis = epochtime*1000;
 
   Serial.println("Start Check Status");
-  http.begin(client, "http://192.168.1.123:8888/nodemcu/update");
+  http.begin(client, "http://ln-web.ichigozdata.win:8888/nodemcu/update");
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<200> doc;
