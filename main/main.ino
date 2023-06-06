@@ -3,6 +3,12 @@
 #include <RTClib.h>             //Time Counter Module
 #include <ArduinoJson.h>        //Manage JSON File
 #include <ESP8266HTTPClient.h>  //API Connection
+#include <NTPClient.h>          //https://randomnerdtutorials.com/esp8266-nodemcu-date-time-ntp-client-server-arduino/
+#include <WiFiUdp.h>
+
+
+
+
 
 
 //Digital Port Initial-----
@@ -12,17 +18,21 @@
 #define LED_PIN4 D7  //พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 7
 
 //API Method Initial-----
-#define SERVER_PORT 8888                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "***********";  // URL Domain ที่ API ใช้งานอยู่
+#define SERVER_PORT 8888                                   // Port ที่ใช้เชื่อมต่อกับ Server ของ API
+const char* server_ip = "http://ln-web.ichigozdata.win/";  // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
 
-//WIFI Variable initial-----
-const char* ssid = "***********";  //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char* password = "**********";          //Password ของ WIFI
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
-unsigned long previousMillis1;
+//WIFI Variable initial-----
+const char* ssid = "*****";  //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char* password = "****";          //Password ของ WIFI
+
+unsigned long previousMillis = 0;
+const unsigned long interval = 10000;  // 10 วินาที
 
 //Electic Mornitor By PZEM-004T Initial-----
 PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ตเชื่อมต่อให้กับ โมดูล Pzem004-T
@@ -79,13 +89,20 @@ void setup() {
   if (RTC.lostPower()) {                                    //หากถ่านที่ให้พลังงาน RTC_DS3231 หมด เวลาที่ตั้งไว้จะหาย
     Serial.println("RTC lost power, let's set the time!");  //แสดง `RTC lost power, let's set the time!`
   }
+  timeClient.begin();
+  timeClient.setTimeOffset(0);  //+0 Epoch GMT
 }
 //-------------------------------------loop-----------------------------------------
 void loop() {                //เริ่ม Loop Main Function
   DateTime now = RTC.now();  //เรียกค่าวันที่จาก โมดูล RTC_DS3231
   int indays = now.hour();   // Today
+  timeClient.update();
   //วันที่จะทำการส่งข้อมูลขึ้นไปที่ ฐานข้อมูล
-  checkstatus(now);  // เข้าสู่ฟังก์ชันส่งข้อมูลไปให้ฐานข้อมูล
+  unsigned long currentMillisedcond = millis();
+  if (currentMillisedcond - previousMillis >= interval) {
+    previousMillis = currentMillisedcond;
+    checkstatus(now);  // เข้าสู่ฟังก์ชันส่งข้อมูลไปให้ฐานข้อมูล
+  }
   Serial.print("minute is : ");
   Serial.println(now.minute());
   Serial.println(" : Left day to Send Energy : ");
@@ -424,15 +441,15 @@ bool check_safety(float power) {
 void checkstatus(DateTime mainTime) {
   DateTime now = mainTime;
 
-  unsigned long currentMillis = millis();
-  unsigned long serverMillis = currentMillis + now.unixtime() * 1000;
+  unsigned long long epochtime = timeClient.getEpochTime();
+  unsigned long long serverMillis = epochtime*1000;
 
   Serial.println("Start Check Status");
-  http.begin(client, "http://ln-web.ichigozdata.win:8888/nodemcu/update");
+  http.begin(client, "http://192.168.1.123:8888/nodemcu/update");
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<200> doc;
-  doc["millis"] = serverMillis;
+  doc["millis"] = String(serverMillis);
 
   String json;
   serializeJson(doc, json);
