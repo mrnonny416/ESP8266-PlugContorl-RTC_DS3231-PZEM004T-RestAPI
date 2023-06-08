@@ -19,7 +19,7 @@
 
 //API Method Initial-----
 #define SERVER_PORT 8888                                   // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char* server_ip = "http://ln-web.ichigozdata.win/";  // URL Domain ที่ API ใช้งานอยู่
+const char* server_ip = "ln-web.ichigozdata.win";  // URL Domain ที่ API ใช้งานอยู่
 
 //Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
@@ -28,8 +28,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 //WIFI Variable initial-----
-const char* ssid = "*****";     //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char* password = "****";  //Password ของ WIFI
+const char* ssid = "3BB_Ni-Nack-Non_2.4GHz";  //SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char* password = "0850393221";          //Password ของ WIFI
 
 unsigned long previousMillis = 0;
 const unsigned long interval = 10000;  // 10 วินาที
@@ -95,16 +95,17 @@ void setup() {
   timeClient.setTimeOffset(0);  //+0 Epoch GMT
 
   Serial.println(String("Connect API server at : ") + server_ip + SERVER_PORT);
-  delay(2000);
 }
 //-------------------------------------loop-----------------------------------------
 void loop() {                //เริ่ม Loop Main Function
+
   DateTime now = RTC.now();  //เรียกค่าวันที่จาก โมดูล RTC_DS3231
   int indays = now.hour();   // Today
   timeClient.update();
   //วันที่จะทำการส่งข้อมูลขึ้นไปที่ ฐานข้อมูล
   unsigned long currentMillisedcond = millis();
   if (currentMillisedcond - previousMillis >= interval) {
+    Serial.println("\n\n\n\n_________________________________Start Loop_______________________________________");
     previousMillis = currentMillisedcond;
     checkstatus(now);  // เข้าสู่ฟังก์ชันส่งข้อมูลไปให้ฐานข้อมูล
 
@@ -221,7 +222,7 @@ void CONTROL_PLUG_ON_OFF(int channelId, bool status) {
       return;              //ทำการออกจากฟังก์ชัน CONTROL_PLUG_ON_OFF
       break;               //ออกจากฟังก์ชัน switch
   }
-  Serial.println(String("Web control LED ID ") + channelId + " set to [" + status + "]");
+  Serial.println(String("Web control LED ID ") + channelId + " set to [" + (status?"On":"Off") + "]"+("✅"));
   digitalWrite(LED_PIN, (status ? LOW : HIGH));  //สั่งงานไฟที่พอร์ต โดยจะส่งค่าเข้าไปในฟังก์ชัน digitalWrite จะประกอบด้วย
   //LED_PIN คือ พอร์ตที่ต้องการสั่งงาน
   //status คือ สถานะที่ต้องการสั่งงาน หากเป็น `TRUE` จะเขียน LOW ไปที่ digital port และหากเป็น `FALSE` จะเขียน HIGH ไปที่ digital port
@@ -325,7 +326,7 @@ void time_plug_on_off(int channelId, int templateId, DateTime now) {
         // now.minute() >= minute_start คือ เวลาในหลักนาทีปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
         // now.minute() <= minute_end คือ เวลาในหลักนาทีปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
         digitalWrite(LED_PIN, LOW);             // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ LOW (เปิดการทำงาน)
-        Serial.println("...Timer Switch ON");   // แสดง `Timer Switch ON`
+        Serial.println("...Timer Switch ON"+String("✅"));   // แสดง `Timer Switch ON`
       } else {                                  // หากไม่เข้าเงื่อนไขที่ว่า `เวลาปัจจุบันไม่อยู่ในช่วงที่ตั้งเวลาไว้`
         digitalWrite(LED_PIN, HIGH);            // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ HIGH (ปิดการทำงาน)
         Serial.println("...Timer Switch OFF");  // แสดง `Timer Switch OFF`
@@ -359,7 +360,7 @@ void time_plug_on_off(int channelId, int templateId, DateTime now) {
         // now.minute() >= minute_start คือ เวลาในหลักนาทีปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
         // now.minute() <= minute_end คือ เวลาในหลักนาทีปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
         digitalWrite(LED_PIN, LOW);             // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ LOW (เปิดการทำงาน)
-        Serial.println("...Timer Switch ON");   // แสดง `Timer Switch ON`
+        Serial.println("...Timer Switch ON"+String("✅"));   // แสดง `Timer Switch ON`
       } else {                                  // หากไม่เข้าเงื่อนไขที่ว่า `เวลาปัจจุบันไม่อยู่ในช่วงที่ตั้งเวลาไว้`
         digitalWrite(LED_PIN, HIGH);            // ทำการสั่งงาน digital port พอร์ตที่ LED_PIN ให้มีสถานะ HIGH (ปิดการทำงาน)
         Serial.println("...Timer Switch OFF");  // แสดง `Timer Switch OFF`
@@ -407,7 +408,7 @@ bool check_safety(float power) {
   // ดึงค่าจากฐานข้อมูลผ่าน API มา
   // นำมาตรวจสอบว่าค่าได้ทำการเปิดการจำกัดกำลังไฟหรือไม่ และกำลังไฟเกินกว่าที่ตั้งไว้หรือไม่
   if (!client.connect(server_ip, SERVER_PORT)) {                                                             //ตรวจสอบการเชื่อมต่อกับ API ว่าทำการเชื่อมต่อได้หรือไม่ โดยจะเชื่อมต่อกับ server_ip (ip หรือ domain name ที่ได้ประกาศไว้) และ SERVER_PORT (port การเชื่อมต่อ เช่น 8888)
-    Serial.println(String("Connection API failed : ") + server_ip + SERVER_PORT + "/savety/all -> failed");  // ถ้าเชื่อมต่อไม่ได้จะแสดง `Connection API failed` จนกว่าจะเชื่อมต่อได้
+    Serial.println(String("Connection API failed : ") + server_ip +":"+ SERVER_PORT + "/savety/all -> failed");  // ถ้าเชื่อมต่อไม่ได้จะแสดง `Connection API failed` จนกว่าจะเชื่อมต่อได้
     delay(2000);                                                                                             // แสดง `onnection API failed` หากเชื่อมต่อไม่ได้
     return false;                                                                                            //ส่งคืนค่า `false` หมายถึง กำลังไฟไม่เกินกว่าที่กำหนดเนื่องจากตรวจสอบกับฐานข้อมูลไม่ได้
   }
@@ -444,7 +445,7 @@ void checkstatus(DateTime mainTime) {
 
   unsigned long long epochtime = timeClient.getEpochTime();
   unsigned long long serverMillis = epochtime * 1000;
-  http.begin(client, "http://192.168.1.123:8888/nodemcu/update");
+  http.begin(client, "http://ln-web.ichigozdata.win:8888/nodemcu/update");
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<200> doc;
@@ -454,13 +455,14 @@ void checkstatus(DateTime mainTime) {
   serializeJson(doc, json);
 
   int httpCode = http.PUT(json);
-  Serial.println("Sending status to http://192.168.1.123:8888/nodemcu/update");
-  Serial.println(String("data -> [millis:") + doc["millis"] + "]");
+  Serial.println("___________________________________________________________________");
+  Serial.println("Sending status to http://ln-web.ichigozdata.win:8888/nodemcu/update");
+  Serial.println(String("data -> [millis:") + String(serverMillis) + "]");
   if (httpCode > 0) {
     if (httpCode == HTTP_CODE_OK) {
       String response = http.getString();
       // ดำเนินการเพิ่มเติมหลังจากส่งข้อมูลสำเร็จ
-      Serial.println(response);
+      Serial.println(response+String("✅"));
     } else {
       Serial.println("HTTP error: " + String(httpCode));
       // ดำเนินการจัดการข้อผิดพลาดเซิร์ฟเวอร์
@@ -471,5 +473,5 @@ void checkstatus(DateTime mainTime) {
   }
 
   http.end();
-  delay(1500);
+  Serial.println("___________________________________________________________________");
 }
