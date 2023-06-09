@@ -23,8 +23,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 // WIFI Variable initial-----
-const char *ssid = "***********";  // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char *password = "************";          // Password ของ WIFI
+const char *ssid = "***********";       // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char *password = "************";  // Password ของ WIFI
 
 unsigned long previousMillis = 0;
 const unsigned long interval = 0;  // 10 วินาที
@@ -316,7 +316,10 @@ void time_plug_on_off(int channelId, int templateId, DateTime now) {
       int hour_end = timeend.substring(0, 2).toInt();        // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่สิ้นสุด
       int minute_end = timeend.substring(3, 5).toInt();      // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่สิ้นสุด
       Serial.println(String("Time  ") + hour_start + ":" + minute_start + " -> " + hour_end + ":" + minute_end + "   Now is " + now.hour() + ":" + now.minute());
-      if (now.hour() >= hour_start && now.minute() >= minute_start && now.hour() <= hour_end && now.minute() <= minute_end) {
+      int convert_minute_start = (hour_start * 60) + minute_start;
+      int convert_minute_end = (hour_end * 60) + minute_end;
+      int convert_minute_now = (now.hour() * 60) + now.minute();
+      if (convert_minute_start <= convert_minute_now && convert_minute_now <= convert_minute_end) {
 
         // เงื่อนไขที่จะทำการตรวจสอบว่า เวลา ปัจจุบัน อยู่ในช่วงเวลาที่ได้มีการตั้งเวลาไว้หรือไม่ จะประกอบด้วยเงื่อนไขดังนี้
         // now.hour() >= hour_start คือ เวลาในหลักชั่วโมงปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
@@ -351,7 +354,10 @@ void time_plug_on_off(int channelId, int templateId, DateTime now) {
       int hour_end = timeend.substring(0, 2).toInt();        // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 0 เป็นต้นไปถึง 2 จะได้ข้อมูล HH:MM -> HH | คือเวลาหลักชั่วโมงที่สิ้นสุด
       int minute_end = timeend.substring(3, 5).toInt();      // ทำการตัดข้อมูลเฉพาะตัวหลักที่ 3 เป็นต้นไปถึง 5 จะได้ข้อมูล HH:MM -> MM | คือเวลาหลักนาทีที่สิ้นสุด
       Serial.println(String("Time  ") + hour_start + ":" + minute_start + " -> " + hour_end + ":" + minute_end + "   Now is " + now.hour() + ":" + now.minute());
-      if (now.hour() >= hour_start && now.minute() >= minute_start && now.hour() <= hour_end && now.minute() <= minute_end) {
+      int convert_minute_start = (hour_start * 60) + minute_start;
+      int convert_minute_end = (hour_end * 60) + minute_end;
+      int convert_minute_now = (now.hour() * 60) + now.minute();
+      if (convert_minute_start <= convert_minute_now && convert_minute_now <= convert_minute_end) {
         // เงื่อนไขที่จะทำการตรวจสอบว่า เวลา ปัจจุบัน อยู่ในช่วงเวลาที่ได้มีการตั้งเวลาไว้หรือไม่ จะประกอบด้วยเงื่อนไขดังนี้
         // now.hour() >= hour_start คือ เวลาในหลักชั่วโมงปัจจุบันมากกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
         // now.hour() <= hour_end คือ เวลาในหลักชั่วโมงปัจจุบันน้อยกว่าหรือตรงกับเวลาที่ได้ตั้งไว้หรือไม่
