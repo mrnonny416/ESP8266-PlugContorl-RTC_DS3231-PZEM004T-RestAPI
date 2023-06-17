@@ -1,4 +1,6 @@
 #include <ESP8266WiFi.h>        //Connect WIFI To INTERNET
+#include <BearSSLHelpers.h>
+#include <WiFiClientSecure.h>
 #include <PZEM004Tv30.h>        //Capure CIRCUIT value
 #include <RTClib.h>             //Time Counter Module
 #include <ArduinoJson.h>        //Manage JSON File
@@ -13,8 +15,9 @@
 #define LED_PIN4 D7  // พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 7
 
 // API Method Initial-----
-#define SERVER_PORT 8888                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
-const char *server_ip = "ln-web.ichigozdata.win";  // URL Domain ที่ API ใช้งานอยู่
+#define SERVER_PORT 443                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
+const char *server_ip = "ln-api.ichigozdata.win";  // URL Domain ที่ API ใช้งานอยู่
+
 
 // Time Counter By DS3231 Initial-----
 RTC_DS3231 RTC;  // ประการศตัวแปร RTC ให้ใช้งานโมดูล
@@ -23,8 +26,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 // WIFI Variable initial-----
-const char *ssid = "***********";       // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
-const char *password = "************";  // Password ของ WIFI
+const char *ssid = "*************";       // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char *password = "***************";  // Password ของ WIFI
 
 unsigned long previousMillis = 0;
 const unsigned long interval = 0;  // 10 วินาที
@@ -36,7 +39,8 @@ PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ตเชื่อ�
 
 // API Method Initial-----
 HTTPClient http;    // ประกาศใช้ HTTPCLient ลงในตัวแปรชื่อ http
-WiFiClient client;  // ประกาศใช้ WiFiClient ลงในตัวแปรชื่อ client
+WiFiClientSecure client;  // ประกาศใช้ WiFiClient ลงในตัวแปรชื่อ client
+
 
 // json file
 DynamicJsonDocument doc_channel(2048);   // สร้าง Json ขนาด 2048 byte
@@ -93,7 +97,7 @@ void setup() {
 }
 //-------------------------------------loop-----------------------------------------
 void loop() {  // เริ่ม Loop Main Function
-
+ client.setInsecure();
   DateTime now = RTC.now();  // เรียกค่าวันที่จาก โมดูล RTC_DS3231
   int indays = now.hour();   // Today
   timeClient.update();
@@ -378,8 +382,9 @@ void report_Power(float power_unit, String real) {  // ฟังก์ชัน�
   // สร้าง Json File สำหรับส่งไป
   // ใส่ข้อมูลลงใน Json File
   // ส่งไฟล์ขึ้นไปที่ API
-  http.begin(client, "http://ln-web.ichigozdata.win:8888/saveunit/add");  // ทำการเปิดใช้งานโปรโตคอล HTTP ไปยังปลายทาง `http://ln-web.ichigozdata.win:8888/saveunit/add`
-  http.addHeader("Content-Type", "application/json");                     // ทำการเขียน Haader สำหรับส่ง API พร้อมบอกว่าเป็น Json File แนบไป
+
+  http.begin(client, server_ip, SERVER_PORT, "/saveunit/add");
+  http.addHeader("Content-Type", "application/json");
   StaticJsonDocument<200> doc;                                            // สร้าง Json ขนาด 200 byte
   doc["unit"] = power_unit;                                               // ใส่ข้อมูล [key:value] -> unit:power_unit | ตัวอย่าง (unit:1000) จะหมายถึงส่งค่า unit ไปมีค่าเป็น 1000
   doc["date"] = real;                                                     // ใส่ข้อมูล [key:value] -> date:null | Note. null หมายถึงค่าที่ว่างเปล่าไม่มีข้อมูลใดๆ สำหรับ c++ จำเป็นต้องใช้งานเป็น `nullptr` หมายถึง null pointer ซึ่งใช้งานเหมือน null ทั่วไป
@@ -449,7 +454,7 @@ void checkstatus() {
   unsigned long long serverMillis = epochtime * 1000;
 
   // Serial.println("Start Check Status");
-  http.begin(client, "http://ln-web.ichigozdata.win:8888/nodemcu/update");
+  http.begin(client, server_ip, SERVER_PORT, "/nodemcu/update");
   http.addHeader("Content-Type", "application/json");
 
   StaticJsonDocument<200> doc;
@@ -480,3 +485,20 @@ void checkstatus() {
   http.end();
   Serial.println("___________________________________________________________________");
 }
+
+void setClock() {
+  configTime(0, 0, "pool.ntp.org");
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2) {
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println("");
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  Serial.print("Current time: ");
+  Serial.print(asctime(&timeinfo));
+}
+
