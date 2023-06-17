@@ -1,4 +1,4 @@
-#include <ESP8266WiFi.h>        //Connect WIFI To INTERNET
+#include <ESP8266WiFi.h>  //Connect WIFI To INTERNET
 #include <BearSSLHelpers.h>
 #include <WiFiClientSecure.h>
 #include <PZEM004Tv30.h>        //Capure CIRCUIT value
@@ -15,7 +15,7 @@
 #define LED_PIN4 D7  // พอร์ตเชื่อมต่อ ดิจิตอลช่องที่ 7
 
 // API Method Initial-----
-#define SERVER_PORT 443                           // Port ที่ใช้เชื่อมต่อกับ Server ของ API
+#define SERVER_PORT 443                            // Port ที่ใช้เชื่อมต่อกับ Server ของ API
 const char *server_ip = "ln-api.ichigozdata.win";  // URL Domain ที่ API ใช้งานอยู่
 
 
@@ -26,7 +26,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 // WIFI Variable initial-----
-const char *ssid = "*************";       // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
+const char *ssid = "*************";        // SSID ของ WIFI ที่ต้องใช้เชื่อมต่อ
 const char *password = "***************";  // Password ของ WIFI
 
 unsigned long previousMillis = 0;
@@ -38,7 +38,7 @@ String dayofWeek[7] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
 PZEM004Tv30 pzem(D5, D6);  // ประกาศพอร์ตเชื่อมต่อให้กับ โมดูล Pzem004-T
 
 // API Method Initial-----
-HTTPClient http;    // ประกาศใช้ HTTPCLient ลงในตัวแปรชื่อ http
+HTTPClient http;          // ประกาศใช้ HTTPCLient ลงในตัวแปรชื่อ http
 WiFiClientSecure client;  // ประกาศใช้ WiFiClient ลงในตัวแปรชื่อ client
 
 
@@ -97,7 +97,7 @@ void setup() {
 }
 //-------------------------------------loop-----------------------------------------
 void loop() {  // เริ่ม Loop Main Function
- client.setInsecure();
+  client.setInsecure();
   DateTime now = RTC.now();  // เรียกค่าวันที่จาก โมดูล RTC_DS3231
   int indays = now.hour();   // Today
   timeClient.update();
@@ -179,7 +179,9 @@ void loop() {  // เริ่ม Loop Main Function
       // previousMillis1 = millis();                           //wera == 1 : wera คือ สถานะว่าวันที่นี้ทำการส่งค่าไปยังฐานข้อมูลหรือยัง โดย `1` หมายถึงยังไม่ได้ส่ง และ `0` คือทำการส่งค่าไปแล้ว หากเป็น 1 จะคืนค่า `TRUE`
       // หากเมื่อทั้ง 2  เงื่อนไขเป็น `TRUE` จะทำตามคำสั่งภายในเงื่อนไข
       if (power > 0) {
-        String real = String(now.year()) + "-" + String(now.month()) + "-" + String(now.day()) + " " + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());  // ตรวจสอบว่าค่าพลังงานที่อ่านได้มีมากกว่า 0
+        // String real = String(now.year()) + "-" + String(now.month()) + "-" + String(now.day()) + " " + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second());  // ตรวจสอบว่าค่าพลังงานที่อ่านได้มีมากกว่า 0
+        String real = String(now.year()) + "-" + formatDigits(now.month()) + "-" + formatDigits(now.day()) + "T" + formatDigits(now.hour()) + ":" + formatDigits(now.minute()) + ":" + formatDigits(now.second()) + "." + formatMilliseconds(millis()) + "Z";
+
         report_Power(power, real);
         //<-----------------------------------call function
         // เรียกใช้ฟังก์ชัน report_Power(energy) คือฟังก์ชันในการส่งค่าขึ้นไปยังฐานข้อมูล โดยส่งข้อมูล(parameter) เข้าไป คือ
@@ -385,9 +387,9 @@ void report_Power(float power_unit, String real) {  // ฟังก์ชัน�
 
   http.begin(client, server_ip, SERVER_PORT, "/saveunit/add");
   http.addHeader("Content-Type", "application/json");
-  StaticJsonDocument<200> doc;                                            // สร้าง Json ขนาด 200 byte
-  doc["unit"] = power_unit;                                               // ใส่ข้อมูล [key:value] -> unit:power_unit | ตัวอย่าง (unit:1000) จะหมายถึงส่งค่า unit ไปมีค่าเป็น 1000
-  doc["date"] = real;                                                     // ใส่ข้อมูล [key:value] -> date:null | Note. null หมายถึงค่าที่ว่างเปล่าไม่มีข้อมูลใดๆ สำหรับ c++ จำเป็นต้องใช้งานเป็น `nullptr` หมายถึง null pointer ซึ่งใช้งานเหมือน null ทั่วไป
+  StaticJsonDocument<200> doc;  // สร้าง Json ขนาด 200 byte
+  doc["unit"] = power_unit;     // ใส่ข้อมูล [key:value] -> unit:power_unit | ตัวอย่าง (unit:1000) จะหมายถึงส่งค่า unit ไปมีค่าเป็น 1000
+  doc["date"] = real;           // ใส่ข้อมูล [key:value] -> date:null | Note. null หมายถึงค่าที่ว่างเปล่าไม่มีข้อมูลใดๆ สำหรับ c++ จำเป็นต้องใช้งานเป็น `nullptr` หมายถึง null pointer ซึ่งใช้งานเหมือน null ทั่วไป
 
   String json;               // สร้างตัวแปรชื่อ json เพื่อนำมานำข้อมูล json file มาไว้เป็นข้อความแล้วส่งไปทาง HTTP โปรโตอคล
   serializeJson(doc, json);  // ทำการนำไฟล์ json file มาเก็บไว้ในตัวแปร `json`
@@ -502,3 +504,18 @@ void setClock() {
   Serial.print(asctime(&timeinfo));
 }
 
+String formatDigits(int digits) {
+  if (digits < 10) {
+    return "0" + String(digits);
+  }
+  return String(digits);
+}
+
+String formatMilliseconds(unsigned long milliseconds) {
+  if (milliseconds < 10) {
+    return "00" + String(milliseconds);
+  } else if (milliseconds < 100) {
+    return "0" + String(milliseconds);
+  }
+  return String(milliseconds);
+}
